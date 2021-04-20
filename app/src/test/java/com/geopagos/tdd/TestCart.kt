@@ -9,9 +9,12 @@ class TestCart {
     private val otherBook = "SBN 23232323232"
     private val book = "SBN 12314214215"
 
+    private val bookCatalogItem = CatalogItem(book, 10.0)
+    private val otherBookCatalogItem = CatalogItem(otherBook, 100.0)
+
     private fun cart(catalog: Catalog<String>) = Cart(catalog)
 
-    private fun catalog(books: MutableSet<String>) = Catalog(books)
+    private fun catalog(books: MutableSet<CatalogItem<String>>) = Catalog(books)
 
     private fun assertContainsBookQuantity(cartBooks: Cart<String>, book: String, quantity: Int = 1){
         assert(cartBooks.contains(book))
@@ -29,7 +32,7 @@ class TestCart {
 
     @Test
     fun addBookToCart(){
-        val catalog = catalog(mutableSetOf(book))
+        val catalog = catalog(mutableSetOf(bookCatalogItem))
         val cart = cart(catalog)
 
         cart.add(book)
@@ -40,7 +43,7 @@ class TestCart {
 
     @Test
     fun addMoreThanOneBookToCart(){
-        val catalog = catalog(mutableSetOf(book))
+        val catalog = catalog(mutableSetOf(bookCatalogItem))
         val cart = cart(catalog)
 
         cart.add(book, 3)
@@ -51,7 +54,7 @@ class TestCart {
 
     @Test
     fun addOneBookManyTimes(){
-        val catalog = catalog(mutableSetOf(book))
+        val catalog = catalog(mutableSetOf(bookCatalogItem))
         val cart = cart(catalog)
 
         cart.add(book, 2)
@@ -64,7 +67,7 @@ class TestCart {
 
     @Test
     fun addDifferentBooks(){
-        val catalog = catalog(mutableSetOf(book, otherBook))
+        val catalog = catalog(mutableSetOf(bookCatalogItem, otherBookCatalogItem))
         val cart = cart(catalog)
 
         cart.add(book, 2)
@@ -77,7 +80,7 @@ class TestCart {
 
     @Test(expected = IllegalArgumentException::class)
     fun quantityMustBePositive(){
-        val catalog = catalog(mutableSetOf(book))
+        val catalog = catalog(mutableSetOf(bookCatalogItem))
         val cart = cart(catalog)
 
         cart.add(book, -2)
@@ -85,7 +88,7 @@ class TestCart {
 
     @Test
     fun listCartBooks(){
-        val catalog = catalog(mutableSetOf(book, otherBook))
+        val catalog = catalog(mutableSetOf(bookCatalogItem, otherBookCatalogItem))
         val cart = cart(catalog)
 
         cart.add(book, 2)
@@ -101,24 +104,49 @@ class TestCart {
 
     @Test
     fun catalogContainsBookAdded(){
-        val catalog = catalog(mutableSetOf(book))
+        val catalog = catalog(mutableSetOf(bookCatalogItem))
 
         assert(catalog.contains(book))
     }
 
     @Test
     fun catalogDoesNotContainsBookNotAdded(){
-        val catalog = catalog(mutableSetOf(book))
+        val catalog = catalog(mutableSetOf(bookCatalogItem))
 
         assertFalse(catalog.contains(otherBook))
     }
 
     @Test(expected = IllegalArgumentException::class)
     fun addBookToCartNotInCatalog(){
-        val catalog = catalog(mutableSetOf(book))
+        val catalog = catalog(mutableSetOf(bookCatalogItem))
         val cart = cart(catalog)
 
         cart.add(otherBook)
+    }
+
+    @Test
+    fun canAskAmountForCatalogItem() {
+        val catalog = catalog(mutableSetOf(bookCatalogItem))
+
+        assertEquals(bookCatalogItem.price, catalog.priceOf(bookCatalogItem.item))
+    }
+
+
+    @Test
+    fun canAskAmountForMoreThanOneBookCatalogItem() {
+        val catalog = catalog(mutableSetOf(bookCatalogItem, otherBookCatalogItem))
+
+        assertEquals(bookCatalogItem.price, catalog.priceOf(bookCatalogItem.item))
+        assertEquals(otherBookCatalogItem.price, catalog.priceOf(otherBookCatalogItem.item))
+    }
+
+    @Test
+    fun askPriceForNotPresentItemThrowsException() {
+        val catalog = catalog(mutableSetOf(bookCatalogItem))
+
+        assertExceptionIsThrown<IllegalArgumentException>(Catalog.EXCEPTION_ITEM_NOT_PRESENT) {
+            catalog.priceOf(otherBookCatalogItem.item)
+        }
     }
 
 }
